@@ -1,8 +1,7 @@
 import User from "../models/user.model.js";
-import { registerUser, loginUser } from "../services/auth.service.js";
+import { registerUser, loginUser, logoutUser, changePassword  } from "../services/auth.service.js";
 
 export const register = async(req, res) => {
-    console.log(req.body)
     const result = await registerUser(req.body);
 
     res.status(201).json(result);
@@ -28,4 +27,37 @@ export const getCurrentUser = async (req, res) => {
         message: error.message
     });
    }
+};
+
+export const logout = async (req, res) => {
+    try {
+        const result = await logoutUser();
+
+        return res.status(200).json(result);
+    } catch (error) {
+        return res.status(500).json({
+            success: true,
+            message: error.message
+        });
+    }
+};
+
+export const changeUserPassword = async (req, res) => {
+    try {
+        const{ oldPassword, newPassword } = req.body;
+
+        const result = await changePassword(
+            req.user.id,
+            oldPassword,
+            newPassword
+        );
+
+        return res.status(200).json(result);
+
+    } catch (error) {
+        return res.status(400).json({
+            success: true,
+            message: "error.message"
+        });
+    }
 };

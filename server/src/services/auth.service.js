@@ -70,14 +70,50 @@ export const loginUser= async (userData) => {
         }
     );
 
-    console.log("Generated Token:", token);
-    console.log("Token Length:", token.length);
-    console.log("Decoded Token:", jwt.decode(token));
-
     return {
         success: true,
         message: "Login successful.",
         token,
         user,
     };
-}
+};
+
+export const changePassword = async (userId, oldPassword, newPassword) => {
+
+    if(!oldPassword || !newPassword) {
+        throw new Error("Old Password and New Password are required");
+    }
+
+    const user = await User.findById(userId);
+
+    if(!user) {
+        throw new Error("User not found");
+    }
+
+    const isPasswordCorrect = await bcrypt.compare(
+        oldPassword,
+        user.password
+    );
+
+    if(isPasswordCorrect){
+        throw new Error("Old Password is Incorrect");
+    }
+
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+
+    newPassword = hashedPassword;
+
+    await user.save();
+
+    return{
+        success: true,
+        message: "Password changed successfully."
+    };
+};
+
+export const logoutUser = async () => {
+    return {
+        success: true,
+        message: "Logged out successfully."
+    };
+};
