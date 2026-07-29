@@ -70,6 +70,10 @@ export const loginUser= async (userData) => {
         }
     );
 
+    console.log("Generated Token:", token);
+    console.log("Token Length:", token.length);
+    console.log("Decoded Token:", jwt.decode(token));
+
     return {
         success: true,
         message: "Login successful.",
