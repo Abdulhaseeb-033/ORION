@@ -70,10 +70,21 @@ export const loginUser= async (userData) => {
         }
     );
 
+    const refreshToken = jwt.sign(
+        {
+            id:user._id
+        },
+        process.env.JWT_REFRESH_SECRET,
+        {
+            expiresIn: "30d",
+        }
+    )
+
     return {
         success: true,
         message: "Login successful.",
-        token,
+        accessToken: token,
+        refreshToken,
         user,
     };
 };
@@ -95,21 +106,51 @@ export const changePassword = async (userId, oldPassword, newPassword) => {
         user.password
     );
 
-    if(isPasswordCorrect){
+    if(!isPasswordCorrect){
         throw new Error("Old Password is Incorrect");
     }
 
-    const hashedPassword = await bcrypt.hash(newPassword, 10);
+    if(oldPassword === newPassword) {
+        throw new Error("New password most be differnt from old password");
+    }
 
-    newPassword = hashedPassword;
+   const hashedPassword = await bcrypt.hash(newPassword, 10);
 
-    await user.save();
+   user.password = hashedPassword;
 
-    return{
-        success: true,
-        message: "Password changed successfully."
-    };
+   await user.save();
+
+   return {
+    success: true,
+    message: "Password changed successfully."
+   };
 };
+
+export const refreshAccessToken = async (refreshToken) => {
+    if(!refreshToken) {
+        throw new Error("Refresh token is required");
+    }
+
+    const decoded = jwt.verify(
+        refreshToken,
+        process.env.JWT_REFRESH_SECRET
+    );
+
+    const accessToken = jwt.sign(
+        {
+            id:decoded.id
+        },
+        process.env.JWT_SECRET,
+        {
+            expiresIn: "15m"
+        }
+    );
+
+    return {
+        success: true,
+        accessToken
+    }
+}
 
 export const logoutUser = async () => {
     return {
