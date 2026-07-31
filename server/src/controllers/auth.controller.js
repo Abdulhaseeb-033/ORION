@@ -1,5 +1,5 @@
 import User from "../models/user.model.js";
-import { registerUser, loginUser, logoutUser, changePassword, refreshAccessToken } from "../services/auth.service.js";
+import { registerUser, loginUser, logoutUser, changePassword, refreshAccessToken, forgotPasswordService } from "../services/auth.service.js";
 
 export const register = async(req, res) => {
     const result = await registerUser(req.body);
@@ -73,6 +73,13 @@ export const refreshToken = async (req, res) => {
         return res.status(401).json({
             success: true,
             message:error.message
-        })
+        });
     }
-}
+};
+
+export const forgotPassword = async (req, res) => {
+    console.log(req.body)
+    const result = await forgotPasswordService(req.body.email);
+
+    res.status(200).json(result);
+};

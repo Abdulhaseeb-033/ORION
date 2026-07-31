@@ -66,7 +66,7 @@ export const loginUser= async (userData) => {
         },
         process.env.JWT_SECRET,
         {
-            expiresIn: "7d",
+            expiresIn: "15m",
         }
     );
 
@@ -149,12 +149,57 @@ export const refreshAccessToken = async (refreshToken) => {
     return {
         success: true,
         accessToken
-    }
-}
+    };
+};
 
 export const logoutUser = async () => {
     return {
         success: true,
         message: "Logged out successfully."
     };
+};
+
+export const forgotPasswordService = async (email) => {
+    if(!email) {
+        throw new Error("Email is required.");
+    }
+
+    const user = await User.findOne({email});
+
+    if(!user) {
+        throw new Error("User not found.")
+    }
+
+    const resetToken = jwt.sign(
+        {
+            id: user._id
+        },
+        process.env.JWT_SECRET,
+        {
+            expiresIn:"15m"
+        }
+    );
+
+    return {
+        success: true,
+        resetToken
+    };
+};
+
+export const resetPassword = async (token, newPassword) => {
+    if(!token || !newPassword) {
+        throw new Error("Token and New Password are required");
+    }
+
+    const decoded = jwt.verify(
+        token,
+        process.env.JWT_SECRET
+    );
+
+    const user = await User.findById(decoded.id);
+
+    if(!user) {
+        throw new Error("User not found");
+        
+    }
 };
