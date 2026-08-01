@@ -29,9 +29,20 @@ const user = await User.create({
     password:hashedPassword
 });
 
+const verificationToken = jwt.sign(
+    {
+        id: user._id,
+    },
+    process.env.JWT_SECRET,
+    {
+        expiresIn: "24h",
+    }
+);    
+
 return {
     success: true,
     message: "User registered successfully.",
+    verificationToken,
     user,
 };
 
@@ -111,7 +122,7 @@ export const changePassword = async (userId, oldPassword, newPassword) => {
     }
 
     if(oldPassword === newPassword) {
-        throw new Error("New password most be differnt from old password");
+        throw new Error("New password must be different from old password");
     }
 
    const hashedPassword = await bcrypt.hash(newPassword, 10);
@@ -186,7 +197,7 @@ export const forgotPasswordService = async (email) => {
     };
 };
 
-export const resetPassword = async (token, newPassword) => {
+export const resetPasswordService = async (token, newPassword) => {
     if(!token || !newPassword) {
         throw new Error("Token and New Password are required");
     }
@@ -202,4 +213,73 @@ export const resetPassword = async (token, newPassword) => {
         throw new Error("User not found");
         
     }
+
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+
+    user.password = hashedPassword;
+
+    await user.save();
+
+    return {
+        success: true,
+        message: "Password reset successfully."
+    };
+};
+
+export const verifyEmailService = async (token) => {
+    if(!token){
+        throw new Error("Verification token is required");
+    }
+
+    const decoded = jwt.verify(
+        token,
+        process.env.JWT_SECRET
+    );
+
+    const user = await User.findById(decoded.id);
+
+    if(!user) {
+        throw new Error("User not found");
+    }
+
+    user.isEmailVerified = true;
+
+    await user.save();
+
+    return {
+        success: true,
+        message: "Email verified successfully."
+    };
+};
+
+export const resetVerficationEmail = async (email) => {
+    if(!email) {
+        throw new Error("Email is required.");
+    }
+
+    const user = await User.findOne({email});
+
+    if(!user) {
+        throw new Error("User not found.")
+    }
+
+    if(user.isEmailVerified) {
+        throw new Error("Email is already verified.");
+    }
+
+    const verificationToken = jwt.sign(
+        {
+            id: user._id,
+        },
+        process.env.JWT_SECRET,
+        {
+            expiresIn: "24h",
+        }
+    );
+
+    return {
+        success: true,
+        verificationToken,
+        message: "Verification email sent successfully."
+    };
 };
