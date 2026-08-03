@@ -1,6 +1,7 @@
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import User from "../models/user.model.js";
+import { sendVerificationEmail } from "./mail.service.js";
 
 export const registerUser = async (userData) => {
     const { fullName, username, email, password } = userData;
@@ -38,6 +39,8 @@ const verificationToken = jwt.sign(
         expiresIn: "24h",
     }
 );    
+
+await sendVerificationEmail(user.email, user.fullName, verificationToken);
 
 return {
     success: true,
