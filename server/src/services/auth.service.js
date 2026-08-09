@@ -1,7 +1,7 @@
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import User from "../models/user.model.js";
-import { sendVerificationEmail } from "./mail.service.js";
+import { sendVerificationEmail, sendWelcomeEmail, sendResetPasswordEmail, sendResetVerificationEmail, sendPasswordChangedEmail, sendPasswordResetSuccessEmail } from "./mail.service.js";
 
 export const registerUser = async (userData) => {
     const { fullName, username, email, password } = userData;
@@ -134,6 +134,8 @@ export const changePassword = async (userId, oldPassword, newPassword) => {
 
    await user.save();
 
+   await sendPasswordChangedEmail(user.email, user.fullName)
+
    return {
     success: true,
     message: "Password changed successfully."
@@ -194,9 +196,11 @@ export const forgotPasswordService = async (email) => {
         }
     );
 
+    await sendResetPasswordEmail(user.email, user.fullName, resetToken);
+
     return {
         success: true,
-        resetToken
+        message: "Reset password email sent successfully."
     };
 };
 
@@ -223,6 +227,8 @@ export const resetPasswordService = async (token, newPassword) => {
 
     await user.save();
 
+    await sendPasswordResetSuccessEmail(user.email, user.fullName);
+
     return {
         success: true,
         message: "Password reset successfully."
@@ -248,6 +254,8 @@ export const verifyEmailService = async (token) => {
     user.isEmailVerified = true;
 
     await user.save();
+
+    await sendWelcomeEmail(user.email, user.fullName);
 
     return {
         success: true,
@@ -280,9 +288,10 @@ export const resetVerficationEmail = async (email) => {
         }
     );
 
+    await sendResetVerificationEmail(user.email, user.fullName, verificationToken);
+
     return {
         success: true,
-        verificationToken,
         message: "Verification email sent successfully."
     };
 };
