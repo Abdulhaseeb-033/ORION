@@ -1,13 +1,14 @@
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import User from "../models/user.model.js";
+import ApiError from "../utils/ApiError.js";
 import { sendVerificationEmail, sendWelcomeEmail, sendResetPasswordEmail, sendResetVerificationEmail, sendPasswordChangedEmail, sendPasswordResetSuccessEmail } from "./mail.service.js";
 
 export const registerUser = async (userData) => {
     const { fullName, username, email, password } = userData;
 
     if (!fullName || !username || !email || !password) {
-        throw new Error("All fields are required.");
+        throw new ApiError(400, "All fields are required.")
     }
   
     const existingUser = await User.findOne({
@@ -18,7 +19,7 @@ export const registerUser = async (userData) => {
 });
 
 if (existingUser) {
-    throw new Error("User already exists.");
+    throw new ApiError(409, "User already exists.");
 }
 
 const hashedPassword = await bcrypt.hash(password, 10);
@@ -43,10 +44,13 @@ const verificationToken = jwt.sign(
 await sendVerificationEmail(user.email, user.fullName, verificationToken);
 
 return {
-    success: true,
-    message: "User registered successfully.",
-    verificationToken,
-    user,
+   user: {
+    id: user._id,
+    fullName: user.fullName,
+    username: user.username,
+    email: user.email,
+    isEmailVerified: user.isEmailVerified
+   }
 };
 
 };
@@ -55,13 +59,13 @@ export const loginUser= async (userData) => {
     const { email, password } = userData;
 
     if (!email || !password) {
-        throw new Error("Email and Password are required.");
+        throw new ApiError(400, "Email and Password are required.");
     }
 
     const user = await User.findOne({email});
 
     if (!user) {
-        throw new Error("User not found.");
+        throw new ApiError(401, "Invalid credentials.");
     }
 
     const isPasswordCorrect = await bcrypt.compare(
@@ -70,7 +74,7 @@ export const loginUser= async (userData) => {
     );
 
     if(!isPasswordCorrect) {
-        throw new Error("Invalid credentials.");
+        throw new ApiError(401, "Invalid credentials.");
     }
 
     const token = jwt.sign(
@@ -95,24 +99,28 @@ export const loginUser= async (userData) => {
     )
 
     return {
-        success: true,
-        message: "Login successful.",
-        accessToken: token,
+        token,
         refreshToken,
-        user,
+        user: {
+            id: user._id,
+            fullName: user.fullName,
+            username: user.username,
+            email: user.email,
+            isEmailVerified: user.isEmailVerified
+        }
     };
 };
 
 export const changePassword = async (userId, oldPassword, newPassword) => {
 
     if(!oldPassword || !newPassword) {
-        throw new Error("Old Password and New Password are required");
+        throw new ApiError(400, "Old Password and New Password are required.");
     }
 
     const user = await User.findById(userId);
 
     if(!user) {
-        throw new Error("User not found");
+        throw new ApiError(404, "User not found.");
     }
 
     const isPasswordCorrect = await bcrypt.compare(
@@ -121,11 +129,11 @@ export const changePassword = async (userId, oldPassword, newPassword) => {
     );
 
     if(!isPasswordCorrect){
-        throw new Error("Old Password is Incorrect");
+        throw new ApiError(401, "Old Password is Incorrect.");
     }
 
     if(oldPassword === newPassword) {
-        throw new Error("New password must be different from old password");
+        throw new ApiError(400, "New password must be different from old password.");
     }
 
    const hashedPassword = await bcrypt.hash(newPassword, 10);
@@ -137,14 +145,13 @@ export const changePassword = async (userId, oldPassword, newPassword) => {
    await sendPasswordChangedEmail(user.email, user.fullName)
 
    return {
-    success: true,
     message: "Password changed successfully."
    };
 };
 
 export const refreshAccessToken = async (refreshToken) => {
     if(!refreshToken) {
-        throw new Error("Refresh token is required");
+        throw new ApiError(400, "Refresh token is required");
     }
 
     const decoded = jwt.verify(
@@ -163,27 +170,23 @@ export const refreshAccessToken = async (refreshToken) => {
     );
 
     return {
-        success: true,
         accessToken
     };
 };
 
 export const logoutUser = async () => {
-    return {
-        success: true,
-        message: "Logged out successfully."
-    };
+    return {};
 };
 
 export const forgotPasswordService = async (email) => {
     if(!email) {
-        throw new Error("Email is required.");
+        throw new ApiError(400, "Email is required.");
     }
 
     const user = await User.findOne({email});
 
     if(!user) {
-        throw new Error("User not found.")
+        throw new ApiError(404, "User not found.")
     }
 
     const resetToken = jwt.sign(
@@ -198,10 +201,7 @@ export const forgotPasswordService = async (email) => {
 
     await sendResetPasswordEmail(user.email, user.fullName, resetToken);
 
-    return {
-        success: true,
-        message: "Reset password email sent successfully."
-    };
+    return {};
 };
 
 export const resetPasswordService = async (token, newPassword) => {

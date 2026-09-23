@@ -9,109 +9,140 @@ import {
     resetPasswordService, 
     verifyEmailService,
     resetVerficationEmail } from "../services/auth.service.js";
+import ApiResponse from "../utils/ApiResponse.js";
+import asyncHandler from "../utils/asyncHandler.js";
 
-export const register = async(req, res) => {
-    const result = await registerUser(req.body);
+export const register = asyncHandler(async(req, res) => {
+    const user = await registerUser(req.body);
 
-    res.status(201).json(result);
-};
+    return res.status(201).json(
+        new ApiResponse(
+            201,
+            user,
+            "User registered successfully"
+        )
+    );
+});
 
-export const login = async (req, res) => {
+export const login = asyncHandler(async (req, res) => {
     const result = await loginUser(req.body);
 
-    res.status(201).json(result);
-};
+    return res.status(200).json(
+        new ApiResponse(
+            200, 
+            result,
+            "Login successful."
+        )
+    );
+});
 
-export const getCurrentUser = async (req, res) => {
-   try {
-    const user = await User.findById(req.user.id).select("-password");
+export const getCurrentUser = asyncHandler(async (req, res) => {
+   const user = await User.findById(req.user.id).select("-password");
 
-    return res.status(200).json({
-        success: true,
+   return res.status(200).json(
+    new ApiResponse(
+        200,
         user,
-    });
-   } catch (error) {
-    return res.status(500).json({
-        success: false,
-        message: error.message
-    });
-   }
-};
+        "Current user fetched successfully."
+    )
+   );
+});
 
-export const logout = async (req, res) => {
-    try {
-        const result = await logoutUser();
+export const logout = asyncHandler(async (req, res) => {
+    const result = await logoutUser();
 
-        return res.status(200).json(result);
-    } catch (error) {
-        return res.status(500).json({
-            success: true,
-            message: error.message
-        });
-    }
-};
+    return res.status(200).json(
+        new ApiResponse(
+            200,
+            result,
+            "Logged out successfully."
+        )
+    );
+});
 
-export const changeUserPassword = async (req, res) => {
-    try {
-        const { oldPassword, newPassword } = req.body;
+export const changeUserPassword = asyncHandler(async (req, res) => {
+    const { oldPassword, newPassword } = req.body;
 
-        const result = await changePassword(
-            req.user.id,
-            oldPassword,
-            newPassword
-        );
+    const result = await changePassword(
+        req.user.id,
+        oldPassword,
+        newPassword
+    );
 
-        return res.status(200).json(result);
+    return res.status(200).json(
+        new ApiResponse(
+            200,
+            result,
+            "Password changed successfully."
+        )
+    );
+});
 
-    } catch (error) {
-        return res.status(400).json({
-            success: true,
-            message: error.message
-        });
-    }
-};
+export const refreshToken = asyncHandler(async (req, res) => {
+    
+    const {refreshToken} = req.body;
 
-export const refreshToken = async (req, res) => {
-    try {
-        const {refreshToken} = req.body;
+    const result = await refreshAccessToken(refreshToken);
 
-        const result = await refreshAccessToken(refreshToken);
+    return res.status(200).json(
+        new ApiResponse(
+            200,
+            result,
+            "Access token refreshed successfully."
+        )
+    );
+});
 
-        res.status(200).json(result);
-    } catch (error) {
-        return res.status(401).json({
-            success: true,
-            message:error.message
-        });
-    }
-};
-
-export const forgotPassword = async (req, res) => {
+export const forgotPassword = asyncHandler(async (req, res) => {
     
     const result = await forgotPasswordService(req.body.email);
 
-    res.status(200).json(result);
-};
+    return res.status(200).json(
+        new ApiResponse(
+            200,
+            result,
+            "Password reset email sent successfully."
+        )
+    );
+});
 
-export const resetPassword = async (req, res) => {
+export const resetPassword = asyncHandler(async (req, res) => {
     const {token, newPassword} = req.body;
 
     const result = await resetPasswordService(token, newPassword);
 
-    res.status(200).json(result);
-};
+    return res.status(200).json(
+        new ApiResponse(
+            200,
+            result,
+            "Password reset successfully."
+        )
+    );
+});
 
-export const verifyEmail = async (req, res) => {
+export const verifyEmail = asyncHandler(async (req, res) => {
     const { token } = req.body;
 
     const result = await verifyEmailService(token);
 
-    res.status(200).json(result);
-};
+    return res.status(200).json(
+        new ApiResponse(
+            200,
+            result,
+            "Email verified successfully."
+        )
+    );
+});
 
-export const resendVerificationEmail = async (req, res) => {
+export const resendVerificationEmail = asyncHandler(async (req, res) => {
     const { email } = req.body;
 
     const result = await resetVerficationEmail(email);
-    res.status(200).json(result);
-};
+    return res.status(200).json(
+        new ApiResponse(
+            200,
+            result,
+            "Verification email sent successfully."
+        )
+    );
+});

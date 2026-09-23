@@ -179,7 +179,7 @@ export const sendPasswordChangedEmail = async (email, fullName) => {
     console.log("Password changed email sent succussfully.");
 };
 
-export const sendPasswordResetSuccessEmail = async (email, fullname) => {
+export const sendPasswordResetSuccessEmail = async (email, fullName) => {
     const mailOptions = {
         from: process.env.EMAIL_USER,
         to: email,
@@ -188,7 +188,7 @@ export const sendPasswordResetSuccessEmail = async (email, fullname) => {
         html: `
         <div style="font-family:Arial,sans-serif;max-width:600px;margin:auto;padding:20px">
 
-            <h1 style="color:#2563eb;">
+            <h1 style="color: #2563eb;">
                 Password Reset Successful 
             </h1>
 
@@ -266,4 +266,130 @@ export const sendResetVerificationEmail = async (email, fullname, verificationTo
     await transporter.sendMail(mailOptions);
 
     console.log("Resend Verification Email sent successfully");
+};
+
+export const sendNewDeviceLoginEmail = async (email, fullName, deviceInfo ) => {
+    const mailOptions = {
+        from: process.env.EMAIL_USER,
+        to: email,
+        subject: "New Device Login - ORION",
+
+        html:`
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: auto; padding: 24px; border: 1px solid #ddd; border-radius: 10px;">
+         
+          <h1 style="color: #2563eb;">
+             New Device Login
+          </h1>
+          
+          <p>Hello <strong>${fullName}</strong>,</P>
+          
+          <P>
+             A new device gas been used to sign in to your ORION account.
+          </p>
+          
+          <div styles="background: #f3f4f6; padding: 16px; border-radius: 8px; margin: 20px 0;">
+             <p>
+               <strong>Device:</strong>${deviceInfo?.deviceName || "Unknown device"}
+             </p>
+             
+             <p>
+               <strong>Type:</strong>${deviceInfo?.deviceType || "Unknown"}
+             </p>
+
+             <p>
+               <strong>Browser:</strong>${deviceInfo?.browser || "Unknown"}
+             </p>
+
+             <p>
+               <strong>Operating System:</strong>${deviceInfo?.operatingSystem || "Unknown"}
+             </p>
+
+             <p>
+               <strong>Time:</strong>${deviceInfo?.loginTime || new Date().toLocaleString()}
+             </p>
+
+            </div>
+            
+            <p>
+              If this was you, you don't need to do anything.
+            </p>
+            
+            <p style="color: #b91c1c;>
+              <strong>Didn't recognize this login?</strong>
+              <br>
+              Secure your Orion account immediately.
+            </p>
+            
+            <hr>
+            
+            <p style="color: #6b7280; font-size: 13px;">
+              This is an automated security notification from ORION.
+            </p>
+            
+        </div>`
+    };
+
+    await transporter.sendMail(mailOptions);
+
+    console.log("New device login email sent successfully");
+
+};
+
+export const sendSecurityAlertEmail = async (
+    email,
+    fullName,
+    alertMessage
+) => {
+
+    const mailOptions = {
+        from: process.env.EMAIL_USER,
+        to: email,
+        subject: "ORION Security Alert",
+
+        html: `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: auto; padding: 24px; border: 1px solid #ddd; border-radius: 10px;">
+
+            <h1 style="color: #dc2626;">
+                Security Alert 
+            </h1>
+
+            <p>Hello <strong>${fullName}</strong>,</p>
+
+            <p>
+                ORION detected a security-related event on your account.
+            </p>
+
+            <div style="background: #fef2f2; border-left: 4px solid #dc2626; padding: 16px; margin: 20px 0;">
+                <strong>Security Event:</strong>
+                <p style="margin-bottom: 0;">
+                    ${alertMessage}
+                </p>
+            </div>
+
+            <p>
+                If you performed this action, you can safely ignore this
+                message.
+            </p>
+
+            <p style="color: #b91c1c;">
+                <strong>
+                    If you don't recognize this activity, secure your
+                    ORION account immediately.
+                </strong>
+            </p>
+
+            <hr>
+
+            <p style="color: #6b7280; font-size: 13px;">
+                This is an automated security notification from ORION.
+            </p>
+
+        </div>
+        `
+    };
+
+    await transporter.sendMail(mailOptions);
+
+    console.log("Security alert email sent successfully.");
+
 };
