@@ -206,7 +206,7 @@ export const forgotPasswordService = async (email) => {
 
 export const resetPasswordService = async (token, newPassword) => {
     if(!token || !newPassword) {
-        throw new Error("Token and New Password are required");
+        throw new ApiError(400, "Token and New Password are required");
     }
 
     const decoded = jwt.verify(
@@ -217,8 +217,7 @@ export const resetPasswordService = async (token, newPassword) => {
     const user = await User.findById(decoded.id);
 
     if(!user) {
-        throw new Error("User not found");
-        
+        throw new ApiError(404, "User not found");
     }
 
     const hashedPassword = await bcrypt.hash(newPassword, 10);
@@ -229,15 +228,12 @@ export const resetPasswordService = async (token, newPassword) => {
 
     await sendPasswordResetSuccessEmail(user.email, user.fullName);
 
-    return {
-        success: true,
-        message: "Password reset successfully."
-    };
+    return {};
 };
 
 export const verifyEmailService = async (token) => {
     if(!token){
-        throw new Error("Verification token is required");
+        throw new ApiError(400, "Verification token is required");
     }
 
     const decoded = jwt.verify(
@@ -248,7 +244,7 @@ export const verifyEmailService = async (token) => {
     const user = await User.findById(decoded.id);
 
     if(!user) {
-        throw new Error("User not found");
+        throw new ApiError(404, "User not found");
     }
 
     user.isEmailVerified = true;
@@ -257,25 +253,22 @@ export const verifyEmailService = async (token) => {
 
     await sendWelcomeEmail(user.email, user.fullName);
 
-    return {
-        success: true,
-        message: "Email verified successfully."
-    };
+    return {};
 };
 
-export const resetVerficationEmail = async (email) => {
+export const resetVerificationEmail = async (email) => {
     if(!email) {
-        throw new Error("Email is required.");
+        throw new ApiError(400, "Email is required.");
     }
 
     const user = await User.findOne({email});
 
     if(!user) {
-        throw new Error("User not found.")
+        throw new ApiError(404, "User not found.")
     }
 
     if(user.isEmailVerified) {
-        throw new Error("Email is already verified.");
+        throw new ApiError(400, "Email is already verified.");
     }
 
     const verificationToken = jwt.sign(
@@ -290,8 +283,5 @@ export const resetVerficationEmail = async (email) => {
 
     await sendResetVerificationEmail(user.email, user.fullName, verificationToken);
 
-    return {
-        success: true,
-        message: "Verification email sent successfully."
-    };
+    return {};
 };

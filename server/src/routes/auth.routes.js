@@ -12,11 +12,12 @@ import {
     resendVerificationEmail} from "../controllers/auth.controller.js";
 import authMiddleware from "../middleware/auth.middleware.js";
 import asyncHandler from "../utils/asyncHandler.js";
-import ApiError from "../utils/ApiError.js";
+import { validate } from "../middleware/validationMiddleware.js";
+import { registerSchema } from "../validations/Auth/register.schema.js";
 
 const router = Router();
 
-router.post ("/register", register );
+router.post ("/register", validate(registerSchema), register );
 router.post ("/login", login);
 router.get("/me", authMiddleware, asyncHandler(getCurrentUser));
 router.post("/logout", authMiddleware, logout);

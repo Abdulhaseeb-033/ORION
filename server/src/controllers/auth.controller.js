@@ -8,7 +8,7 @@ import {
     forgotPasswordService, 
     resetPasswordService, 
     verifyEmailService,
-    resetVerficationEmail } from "../services/auth.service.js";
+    resetVerificationEmail } from "../services/auth.service.js";
 import ApiResponse from "../utils/ApiResponse.js";
 import asyncHandler from "../utils/asyncHandler.js";
 
@@ -137,7 +137,7 @@ export const verifyEmail = asyncHandler(async (req, res) => {
 export const resendVerificationEmail = asyncHandler(async (req, res) => {
     const { email } = req.body;
 
-    const result = await resetVerficationEmail(email);
+    const result = await resetVerificationEmail(email);
     return res.status(200).json(
         new ApiResponse(
             200,
